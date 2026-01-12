@@ -111,11 +111,17 @@ class GameEngine {
 
     // 3. Difficulty & Spawning
     this.frameCount++;
-    // Score-based Difficulty + Combo Multiplier
-    this.speedMultiplier = 1 + (this.score / 5000) + (this.combo * 0.05);
 
-    // Spawn Rate: Fast in Fever, else based on score
-    let currentSpawnRate = this.isFever ? 10 : Math.max(15, 50 - Math.floor(this.score / 500));
+    // Score-based Difficulty + Combo Multiplier
+    // Adjusted: Cap max speed and reduce curve
+    const scoreFactor = this.score / 10000; // Slower scaling
+    const comboFactor = this.combo * 0.02; // Reduced combo impact per stack
+
+    // Max Multiplier: 2.5x (was uncapped)
+    this.speedMultiplier = Math.min(2.5, 1 + scoreFactor + comboFactor);
+
+    // Spawn Rate: Fast in Fever, else based on score (min 30 frames)
+    let currentSpawnRate = this.isFever ? 10 : Math.max(30, 60 - Math.floor(this.score / 1000));
 
     if (this.frameCount % currentSpawnRate === 0) {
       this.spawnItem();
