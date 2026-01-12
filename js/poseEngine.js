@@ -65,7 +65,7 @@ class PoseEngine {
     }
 
     if (this.webcam) {
-      this.webcam.stop();
+      // this.webcam.stop(); // FIX: Do not stop the stream to prevent authorization issues on restart
     }
   }
 

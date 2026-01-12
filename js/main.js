@@ -64,15 +64,15 @@ async function init() {
       gameEngine = new GameEngine();
 
       // Game Over Callback
-      gameEngine.setGameEndCallback((score) => {
+      gameEngine.setGameEndCallback(async (score) => {
         showGameOver(score);
 
         // Save Score via DataManager
         if (window.dataManager) {
-          window.dataManager.updateScore(score);
+          await window.dataManager.updateScore(score);
         }
 
-        updateRankingDisplay();
+        await updateRankingDisplay();
         stop(false);
       });
 
@@ -111,7 +111,8 @@ async function init() {
 
   } catch (error) {
     console.error("Initialization Error:", error);
-    alert("Error starting game. See console.");
+    // Show specific error to user
+    alert(`Game Init Error: ${error.message}\n(Hint: Camera might be blocked on HTTP!)`);
     startBtn.style.display = 'inline-block';
     startBtn.disabled = false;
   }
@@ -156,7 +157,7 @@ function showGameOver(score) {
 /* ================= LOGIN & RANKING LOGIC ================= */
 
 // Handle Login Button
-function handleLogin() {
+async function handleLogin() {
   const id = document.getElementById("login-id").value;
   const pw = document.getElementById("login-pw").value;
   const msg = document.getElementById("login-msg");
@@ -166,12 +167,12 @@ function handleLogin() {
     return;
   }
 
-  const result = window.dataManager.login(id, pw);
+  const result = await window.dataManager.login(id, pw);
   if (result.success) {
     // Success
     document.getElementById("login-modal").classList.add("hidden");
     // Update Ranking on load
-    updateRankingDisplay();
+    await updateRankingDisplay();
     alert(`Welcome, ${result.user.username}!`);
   } else {
     msg.innerText = result.message;
@@ -179,7 +180,7 @@ function handleLogin() {
 }
 
 // Handle Signup Button
-function handleSignup() {
+async function handleSignup() {
   const id = document.getElementById("login-id").value;
   const pw = document.getElementById("login-pw").value;
   const msg = document.getElementById("login-msg");
@@ -189,23 +190,25 @@ function handleSignup() {
     return;
   }
 
-  const result = window.dataManager.signup(id, pw);
+  const result = await window.dataManager.signup(id, pw);
   if (result.success) {
     alert(result.message);
     // Switch to login mode implies they should click login, but we can auto-login or just let them stay on modal
     msg.innerText = "Signup Success! Please Login.";
     msg.style.color = "green";
+    // Optional: Auto-login
+    // handleLogin(); 
   } else {
     msg.innerText = result.message;
     msg.style.color = "red";
   }
 }
 
-function updateRankingDisplay() {
+async function updateRankingDisplay() {
   const list = document.getElementById("ranking-list");
   if (!window.dataManager) return;
 
-  const rankings = window.dataManager.getRankings();
+  const rankings = await window.dataManager.getRankings();
   list.innerHTML = "";
 
   if (rankings.length === 0) {
@@ -242,3 +245,13 @@ window.init = init;
 window.stop = stop;
 window.handleLogin = handleLogin;
 window.handleSignup = handleSignup;
+
+function toggleInfo() {
+  const modal = document.getElementById("info-modal");
+  if (modal.classList.contains("hidden")) {
+    modal.classList.remove("hidden");
+  } else {
+    modal.classList.add("hidden");
+  }
+}
+window.toggleInfo = toggleInfo;

@@ -42,6 +42,8 @@
         <div class="controls">
           <button type="button" id="startBtn" onclick="init()">START GAME</button>
           <button type="button" id="stopBtn" onclick="stop()" disabled>STOP</button>
+          <button type="button" id="infoBtn" onclick="toggleInfo()" style="background: #2f3542; color: white;">INFO
+            ℹ️</button>
         </div>
       </section>
 
@@ -90,6 +92,28 @@
         <button onclick="handleSignup()" class="btn-secondary">SIGN UP</button>
       </div>
       <p id="login-msg"></p>
+    </div>
+  </div>
+
+  <!-- Game Info Modal -->
+  <div id="info-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 500px; text-align: left;">
+      <h2 style="text-align: center;">📖 Game Rules & Items</h2>
+      <ul style="line-height: 1.6;">
+        <li>🍎 <b>Apple</b>: 100 pts (Basic)</li>
+        <li>🍌 <b>Banana</b>: 200 pts (Tasty!)</li>
+        <li>🌟 <b>Golden Apple</b>: 500 pts (Rare!)</li>
+        <li>💎 <b>Diamond</b>: 1000 pts (Super Rare!)</li>
+        <li>🤢 <b>Rotten</b>: -300 pts (Yuck!)</li>
+        <li>💣 <b>Bomb</b>: Loose 1 Life 💔</li>
+      </ul>
+      <hr>
+      <h3 style="text-align: center;">🔥 Fever Mode</h3>
+      <p style="text-align: center;">Catch <b>10 items</b> in a row (Combo) to trigger!</p>
+      <p style="text-align: center;">Items fall fast, but NO BOMBS!</p>
+      <div style="text-align: center; margin-top: 20px;">
+        <button onclick="toggleInfo()" class="btn-primary">CLOSE</button>
+      </div>
     </div>
   </div>
 

@@ -37,7 +37,9 @@ class GameEngine {
       { type: 'apple', score: 100, speed: 0, color: 'red', icon: '🍎' },
       { type: 'banana', score: 200, speed: 1, color: 'yellow', icon: '🍌' },
       { type: 'bomb', score: 0, speed: 2, color: 'black', icon: '💣' },
-      { type: 'golden', score: 500, speed: 3, color: 'gold', icon: '🌟' }
+      { type: 'golden', score: 500, speed: 3, color: 'gold', icon: '🌟' },
+      { type: 'diamond', score: 1000, speed: 4, color: 'cyan', icon: '💎' }, // New: High Score
+      { type: 'rotten', score: -300, speed: 1, color: 'brown', icon: '🤢' }   // New: Penalty
     ];
 
     // Callbacks
@@ -165,15 +167,18 @@ class GameEngine {
     let type;
 
     if (this.isFever) {
-      // Fever Mode: mostly Gold & Bananas, no Bombs!
-      if (rand < 0.3) type = this.itemTypes[3]; // Golden
-      else type = this.itemTypes[1]; // Banana
+      // Fever Mode: Gold, Diamond, Banana
+      if (rand < 0.2) type = this.itemTypes[4]; // Diamond (20%)
+      else if (rand < 0.5) type = this.itemTypes[3]; // Golden (30%)
+      else type = this.itemTypes[1]; // Banana (50%)
     } else {
-      // Normal Mode: Harder!
-      if (rand < 0.1) type = this.itemTypes[3]; // Golden
-      else if (rand < 0.4) type = this.itemTypes[2]; // Bomb 
-      else if (rand < 0.7) type = this.itemTypes[1]; // Banana
-      else type = this.itemTypes[0]; // Apple
+      // Normal Mode
+      if (rand < 0.05) type = this.itemTypes[4]; // Diamond (5%)
+      else if (rand < 0.15) type = this.itemTypes[3]; // Golden (10%)
+      else if (rand < 0.40) type = this.itemTypes[2]; // Bomb (25%)
+      else if (rand < 0.50) type = this.itemTypes[5]; // Rotten (10%)
+      else if (rand < 0.75) type = this.itemTypes[1]; // Banana (25%)
+      else type = this.itemTypes[0]; // Apple (25%)
     }
 
     this.items.push({
@@ -208,7 +213,7 @@ class GameEngine {
 
   startFever() {
     this.isFever = true;
-    this.feverTimer = 300; // 5 seconds (approx 60fps)
+    this.feverTimer = 180; // Reduced to 3 seconds (was 300/5s)
   }
 
   /**
