@@ -153,7 +153,9 @@ class GameEngine {
       if (item.y > this.canvasHeight) {
         this.items.splice(i, 1);
         // Reset combo if fruit missed (ignore bombs and rotten items)
-        if (item.type !== 'bomb' && item.type !== 'rotten') {
+        // Logic: Only reset if the item was a "Good" item that we missed.
+        const isBadItem = (item.type === 'bomb' || item.type === 'rotten');
+        if (!isBadItem) {
           this.combo = 0;
         }
       }

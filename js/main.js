@@ -242,11 +242,15 @@ function handlePrediction(predictions, pose) {
 
 function toggleInfo() {
   const modal = document.getElementById("info-modal");
+  // Check current computed style or internal class state
+  // Using inline style to force override
   if (modal.classList.contains("hidden")) {
     modal.classList.remove("hidden");
-    modal.style.zIndex = "9999"; // Force top
+    modal.style.display = 'flex'; // Force show
+    modal.style.zIndex = "9999";
   } else {
     modal.classList.add("hidden");
+    modal.style.display = 'none'; // Force hide
   }
 }
 
