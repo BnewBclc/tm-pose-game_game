@@ -29,7 +29,7 @@ class GameEngine {
     this.frameCount = 0;
 
     // Endless Mode Scaling
-    this.baseSpeed = 7; // Increased base speed
+    this.baseSpeed = 5; // Reduced from 7 to 5
     this.speedMultiplier = 1;
 
     // Item Types
@@ -113,15 +113,15 @@ class GameEngine {
     this.frameCount++;
 
     // Score-based Difficulty + Combo Multiplier
-    // Adjusted: Cap max speed and reduce curve
-    const scoreFactor = this.score / 10000; // Slower scaling
-    const comboFactor = this.combo * 0.02; // Reduced combo impact per stack
+    // Adjusted: Even Slower scaling
+    const scoreFactor = this.score / 20000; // Slower scaling (was 10000)
+    const comboFactor = this.combo * 0.01; // Reduced combo impact (was 0.02)
 
-    // Max Multiplier: 2.5x (was uncapped)
-    this.speedMultiplier = Math.min(2.5, 1 + scoreFactor + comboFactor);
+    // Max Multiplier: 2.0x (was 2.5)
+    this.speedMultiplier = Math.min(2.0, 1 + scoreFactor + comboFactor);
 
-    // Spawn Rate: Fast in Fever, else based on score (min 30 frames)
-    let currentSpawnRate = this.isFever ? 10 : Math.max(30, 60 - Math.floor(this.score / 1000));
+    // Spawn Rate: Fast in Fever, else based on score (min 35 frames)
+    let currentSpawnRate = this.isFever ? 15 : Math.max(35, 60 - Math.floor(this.score / 1000));
 
     if (this.frameCount % currentSpawnRate === 0) {
       this.spawnItem();
@@ -132,8 +132,8 @@ class GameEngine {
       let item = this.items[i];
 
       // Move item
-      // Fever items move fast!
-      const moveSpeed = this.isFever ? 12 : (this.baseSpeed + item.speed) * this.speedMultiplier;
+      // Fever items move fast but manageable (8 instead of 12)
+      const moveSpeed = this.isFever ? 9 : (this.baseSpeed + item.speed) * this.speedMultiplier;
       item.y += moveSpeed;
 
       // Collision Check

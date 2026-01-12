@@ -48,7 +48,7 @@ async function init() {
 
       labelContainer = document.getElementById("label-container");
     } else {
-      poseEngine.start();
+      await poseEngine.start();
     }
 
     // 2. Initialize Stabilizer
@@ -101,7 +101,7 @@ async function init() {
     poseEngine.setPredictionCallback(handlePrediction);
 
     // 6. Start Engines
-    if (!poseEngine.isRunning) poseEngine.start();
+    if (!poseEngine.isRunning) await poseEngine.start();
 
     // Start Game
     gameEngine.start();
