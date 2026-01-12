@@ -3,28 +3,105 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Fruit Catcher Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fruit Catcher Premium</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 
 <body>
-  <h1>🍎 Fruit Catcher Game 🍌</h1>
-  <p class="description">몸을 왼쪽/오른쪽으로 기울여 과일을 받으세요! 💣폭탄은 피하세요!</p>
-  <div class="button-container">
-    <button type="button" id="startBtn" onclick="init()">Start</button>
-    <button type="button" id="stopBtn" onclick="stop()" disabled>Stop</button>
-  </div>
-  <div class="canvas-container">
-    <canvas id="canvas"></canvas>
-    <div id="max-prediction"></div>
-  </div>
-  <div id="label-container"></div>
+  <div class="app-container">
+    <!-- Header Area -->
+    <header>
+      <h1>🍓 Fruit Catcher <span class="accent">Premium</span></h1>
+      <p class="description">Move your body <b>Left</b>, <b>Center</b>, or <b>Right</b> to catch fruits!</p>
+    </header>
 
-  <!-- Teachable Machine 라이브러리 -->
+    <!-- Main Content Area -->
+    <main>
+      <!-- Left Column: Game Area -->
+      <section class="game-section">
+        <div class="canvas-wrapper">
+          <canvas id="game-canvas"></canvas>
+          <div id="game-overlay" class="hidden">
+            <h2 id="overlay-title">GAME OVER</h2>
+            <p id="overlay-score">Score: 0</p>
+            <button id="restartBtn">Play Again</button>
+          </div>
+        </div>
+
+        <!-- Game Info: Lives & Score -->
+        <div class="game-info">
+          <div id="lives-container">❤️❤️❤️</div>
+          <div id="score-display">Score: 0</div>
+        </div>
+
+        <div class="controls">
+          <button type="button" id="startBtn" onclick="init()">START GAME</button>
+          <button type="button" id="stopBtn" onclick="stop()" disabled>STOP</button>
+        </div>
+      </section>
+
+      <!-- Right Column: Webcam & Info -->
+      <aside class="sidebar">
+
+        <!-- Webcam Feed -->
+        <div class="webcam-container">
+          <h3>YOUR POSE</h3>
+          <div id="webcam-wrapper"></div> <!-- Webcam canvas will be appended here -->
+          <div id="pose-label">Waiting...</div>
+          <div id="debug-prediction"></div>
+        </div>
+
+        <!-- Ranking Board -->
+        <div class="ranking-container">
+          <h3>🏆 TOP RANKING</h3>
+          <ul id="ranking-list">
+            <li>1. --- : 0</li>
+            <li>2. --- : 0</li>
+            <li>3. --- : 0</li>
+            <li>4. --- : 0</li>
+            <li>5. --- : 0</li>
+          </ul>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+          <div class="key-item">👈 Left</div>
+          <div class="key-item">😐 Center</div>
+          <div class="key-item">👉 Right</div>
+          <div class="key-item bad">💣 Avoid!</div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>🍓 Login to Play</h2>
+      <input type="text" id="login-id" placeholder="Username" autocomplete="off">
+      <input type="password" id="login-pw" placeholder="Password">
+      <div class="modal-buttons">
+        <button onclick="handleLogin()" class="btn-primary">LOGIN</button>
+        <button onclick="handleSignup()" class="btn-secondary">SIGN UP</button>
+      </div>
+      <p id="login-msg"></p>
+    </div>
+  </div>
+
+  <!-- Hidden Label Container for Logic -->
+  <div id="label-container" style="display: none;"></div>
+
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
 
-  <!-- 애플리케이션 모듈 -->
+  <!-- App Modules -->
+  <script src="./js/dataManager.js"></script>
   <script src="./js/stabilizer.js"></script>
   <script src="./js/poseEngine.js"></script>
   <script src="./js/gameEngine.js"></script>

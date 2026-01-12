@@ -1,6 +1,6 @@
 /**
  * main.js
- * Entry point for Fruit Catcher Game
+ * Entry point for Fruit Catcher Premium
  */
 
 // Global Variables
@@ -11,8 +11,8 @@ let ctx;
 let labelContainer;
 
 // Constants
-const CANVAS_WIDTH = 640;
-const CANVAS_HEIGHT = 480;
+const CANVAS_WIDTH = 600;
+const CANVAS_HEIGHT = 500;
 
 /**
  * Initialize Application
@@ -20,64 +20,112 @@ const CANVAS_HEIGHT = 480;
 async function init() {
   const startBtn = document.getElementById("startBtn");
   const stopBtn = document.getElementById("stopBtn");
+  const restartBtn = document.getElementById("restartBtn");
+  const overlay = document.getElementById("game-overlay");
 
-  startBtn.disabled = true;
+  startBtn.style.display = 'none';
+  stopBtn.disabled = false;
+
+  if (restartBtn) restartBtn.onclick = init;
+  if (overlay) overlay.classList.add("hidden");
 
   try {
+    // 0. Update Ranking Display First
+    updateRankingDisplay();
+
     // 1. Initialize PoseEngine
-    poseEngine = new PoseEngine("./my_model/");
-    // Initialize with larger size for better visibility, flip for mirror effect
-    const { maxPredictions, webcam } = await poseEngine.init({
-      size: CANVAS_WIDTH, // Use larger size
-      flip: true
-    });
+    if (!poseEngine) {
+      poseEngine = new PoseEngine("./my_model/");
+      const { maxPredictions, webcam } = await poseEngine.init({
+        size: 200,
+        flip: true
+      });
+
+      // Append Webcam Canvas content
+      const webcamWrapper = document.getElementById("webcam-wrapper");
+      webcamWrapper.innerHTML = '';
+      webcamWrapper.appendChild(webcam.canvas);
+
+      labelContainer = document.getElementById("label-container");
+    } else {
+      poseEngine.start();
+    }
 
     // 2. Initialize Stabilizer
-    stabilizer = new PredictionStabilizer({
-      threshold: 0.8, // Slightly higher threshold for stability
-      smoothingFrames: 5 // Smoother movement
-    });
+    if (!stabilizer) {
+      stabilizer = new PredictionStabilizer({
+        threshold: 0.85,
+        smoothingFrames: 5
+      });
+    }
 
     // 3. Initialize GameEngine
-    gameEngine = new GameEngine();
-    gameEngine.setGameEndCallback((score) => {
-      alert(`GAME OVER! Score: ${score}`);
-      stop();
-    });
+    if (!gameEngine) {
+      gameEngine = new GameEngine();
 
-    // 4. Setup Canvas
-    const canvas = document.getElementById("canvas");
+      // Game Over Callback
+      gameEngine.setGameEndCallback((score) => {
+        showGameOver(score);
+
+        // Save Score via DataManager
+        if (window.dataManager) {
+          window.dataManager.updateScore(score);
+        }
+
+        updateRankingDisplay();
+        stop(false);
+      });
+
+      // Score Update Callback
+      gameEngine.setScoreUpdateCallback((score) => {
+        const scoreDisplay = document.getElementById("score-display");
+        if (scoreDisplay) scoreDisplay.innerText = `Score: ${score}`;
+      });
+
+      // Lives Update Callback
+      gameEngine.setLivesUpdateCallback((lives) => {
+        const livesContainer = document.getElementById("lives-container");
+        if (livesContainer) {
+          livesContainer.innerText = "❤️".repeat(Math.max(0, lives));
+        }
+      });
+    }
+
+    // 4. Setup Game Canvas
+    const canvas = document.getElementById("game-canvas");
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
     ctx = canvas.getContext("2d");
 
-    // 5. Setup Label Container
-    labelContainer = document.getElementById("label-container");
-    labelContainer.style.display = 'none'; // Hide debug labels for cleaner UI
-
-    // 6. Setup PoseEngine Callbacks
+    // 5. Setup Callbacks
     poseEngine.setPredictionCallback(handlePrediction);
-    poseEngine.setDrawCallback(drawPose);
 
-    // 7. Start
-    poseEngine.start();
+    // 6. Start Engines
+    if (!poseEngine.isRunning) poseEngine.start();
 
-    // Start Game immediately or wait for button? 
-    // For now, let's start game immediately when Start is clicked
-    gameEngine.start({ timeLimit: 60 });
+    // Start Game
+    gameEngine.start();
 
-    stopBtn.disabled = false;
+    // Loop for Game Rendering
+    requestAnimationFrame(gameLoop);
+
   } catch (error) {
     console.error("Initialization Error:", error);
-    alert("Failed to initialize. Check console.");
+    alert("Error starting game. See console.");
+    startBtn.style.display = 'inline-block';
     startBtn.disabled = false;
   }
 }
 
-/**
- * Stop Application
- */
-function stop() {
+function gameLoop() {
+  if (gameEngine && gameEngine.isGameActive) {
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    gameEngine.draw(ctx);
+    requestAnimationFrame(gameLoop);
+  }
+}
+
+function stop(resetUI = true) {
   const startBtn = document.getElementById("startBtn");
   const stopBtn = document.getElementById("stopBtn");
 
@@ -89,65 +137,108 @@ function stop() {
     gameEngine.stop();
   }
 
-  if (stabilizer) {
-    stabilizer.reset();
+  if (resetUI) {
+    startBtn.style.display = 'inline-block';
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
   }
-
-  startBtn.disabled = false;
-  stopBtn.disabled = true;
 }
 
-/**
- * Handle Predictions
- * @param {Array} predictions 
- * @param {Object} pose 
- */
+function showGameOver(score) {
+  const overlay = document.getElementById("game-overlay");
+  const scoreText = document.getElementById("overlay-score");
+  scoreText.innerText = `Final Score: ${score}`;
+  overlay.classList.remove("hidden");
+  // Force high z-index to ensure visibility over canvas
+  overlay.style.zIndex = "9999";
+}
+
+/* ================= LOGIN & RANKING LOGIC ================= */
+
+// Handle Login Button
+function handleLogin() {
+  const id = document.getElementById("login-id").value;
+  const pw = document.getElementById("login-pw").value;
+  const msg = document.getElementById("login-msg");
+
+  if (!id || !pw) {
+    msg.innerText = "Please enter ID and Password.";
+    return;
+  }
+
+  const result = window.dataManager.login(id, pw);
+  if (result.success) {
+    // Success
+    document.getElementById("login-modal").classList.add("hidden");
+    // Update Ranking on load
+    updateRankingDisplay();
+    alert(`Welcome, ${result.user.username}!`);
+  } else {
+    msg.innerText = result.message;
+  }
+}
+
+// Handle Signup Button
+function handleSignup() {
+  const id = document.getElementById("login-id").value;
+  const pw = document.getElementById("login-pw").value;
+  const msg = document.getElementById("login-msg");
+
+  if (!id || !pw) {
+    msg.innerText = "Please enter ID and Password.";
+    return;
+  }
+
+  const result = window.dataManager.signup(id, pw);
+  if (result.success) {
+    alert(result.message);
+    // Switch to login mode implies they should click login, but we can auto-login or just let them stay on modal
+    msg.innerText = "Signup Success! Please Login.";
+    msg.style.color = "green";
+  } else {
+    msg.innerText = result.message;
+    msg.style.color = "red";
+  }
+}
+
+function updateRankingDisplay() {
+  const list = document.getElementById("ranking-list");
+  if (!window.dataManager) return;
+
+  const rankings = window.dataManager.getRankings();
+  list.innerHTML = "";
+
+  if (rankings.length === 0) {
+    list.innerHTML = "<li>No records yet.</li>";
+    return;
+  }
+
+  rankings.forEach((r, index) => {
+    const li = document.createElement("li");
+    li.innerText = `${index + 1}. ${r.username} : ${r.score}`;
+    if (index === 0) li.innerText += " 👑";
+    list.appendChild(li);
+  });
+}
+
 function handlePrediction(predictions, pose) {
-  // 1. Stabilize
   const stabilized = stabilizer.stabilize(predictions);
 
-  // 2. Debug Display (Optional)
-  const maxPredictionDiv = document.getElementById("max-prediction");
-  if (maxPredictionDiv) {
-    maxPredictionDiv.innerHTML = `Pose: ${stabilized.className || "-"}`;
+  const poseLabel = document.getElementById("pose-label");
+  if (poseLabel) {
+    poseLabel.innerText = stabilized.className || "Waiting...";
+    if (stabilized.className === 'Left') poseLabel.style.color = '#ff4757';
+    else if (stabilized.className === 'Right') poseLabel.style.color = '#2ed573';
+    else poseLabel.style.color = '#ffd700';
   }
 
-  // 3. Update Game Logic
-  // We pass the canvas dimensions in case window resizes (though fixed for now)
-  if (gameEngine && gameEngine.isGameActive && stabilized.className) {
-    gameEngine.update(stabilized.className, CANVAS_WIDTH, CANVAS_HEIGHT);
-  } else if (gameEngine && gameEngine.isGameActive) {
-    // Even if no pose detected, update game (for items falling)
-    gameEngine.update(null, CANVAS_WIDTH, CANVAS_HEIGHT);
-  }
-}
-
-/**
- * Draw Loop
- * @param {Object} pose 
- */
-function drawPose(pose) {
-  // 1. Draw Webcam Feed
-  if (poseEngine.webcam && poseEngine.webcam.canvas) {
-    // Draw webcam image stretched to fit canvas
-    ctx.drawImage(poseEngine.webcam.canvas, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  }
-
-  // 2. Draw Skeleton (Optional - maybe distracts from game?)
-  // Let's keep it semi-transparent
-  if (pose) {
-    ctx.globalAlpha = 0.3;
-    const minPartConfidence = 0.5;
-    tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
-    tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx);
-    ctx.globalAlpha = 1.0;
-  }
-
-  // 3. Draw Game Elements
   if (gameEngine && gameEngine.isGameActive) {
-    gameEngine.draw(ctx);
+    gameEngine.update(stabilized.className, CANVAS_WIDTH, CANVAS_HEIGHT);
   }
 }
 
-// remove startGameMode as it is integreted into init
-
+// Make functions global for HTML buttons
+window.init = init;
+window.stop = stop;
+window.handleLogin = handleLogin;
+window.handleSignup = handleSignup;
