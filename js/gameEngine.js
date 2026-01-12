@@ -152,8 +152,8 @@ class GameEngine {
       // Remove if off screen
       if (item.y > this.canvasHeight) {
         this.items.splice(i, 1);
-        // Reset combo if fruit missed (ignore bombs)
-        if (item.type !== 'bomb') {
+        // Reset combo if fruit missed (ignore bombs and rotten items)
+        if (item.type !== 'bomb' && item.type !== 'rotten') {
           this.combo = 0;
         }
       }

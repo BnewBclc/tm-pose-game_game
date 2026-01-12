@@ -47,7 +47,7 @@ class PoseEngine {
    * 예측 루프 시작
    */
   async start() {
-    if (this.webcam) {
+    if (this.webcam && this.webcam.webcam.paused) {
       await this.webcam.play();
     }
     this.isRunning = true;

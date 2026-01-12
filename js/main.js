@@ -240,18 +240,19 @@ function handlePrediction(predictions, pose) {
   }
 }
 
+function toggleInfo() {
+  const modal = document.getElementById("info-modal");
+  if (modal.classList.contains("hidden")) {
+    modal.classList.remove("hidden");
+    modal.style.zIndex = "9999"; // Force top
+  } else {
+    modal.classList.add("hidden");
+  }
+}
+
 // Make functions global for HTML buttons
 window.init = init;
 window.stop = stop;
 window.handleLogin = handleLogin;
 window.handleSignup = handleSignup;
-
-function toggleInfo() {
-  const modal = document.getElementById("info-modal");
-  if (modal.classList.contains("hidden")) {
-    modal.classList.remove("hidden");
-  } else {
-    modal.classList.add("hidden");
-  }
-}
-window.toggleInfo = toggleInfo;
+window.toggleInfo = toggleInfo; // Ensure this is exported
